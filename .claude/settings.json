@@ -1,0 +1,8 @@
+{
+  "disableRemoteControl": true,
+  "permissions": {
+    "allow": [
+      "Bash(wacli send text:*)"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://zotov.by/</loc><priority>1.00</priority></url>
+  <url><loc>https://zotov.by/home</loc><priority>0.90</priority></url>
+  <url><loc>https://zotov.by/about</loc><priority>0.80</priority></url>
+  <url><loc>https://zotov.by/computer</loc><priority>0.70</priority></url>
+  <url><loc>https://zotov.by/links</loc><priority>0.70</priority></url>
+  <url><loc>https://zotov.by/photos</loc><priority>0.60</priority></url>
+  <url><loc>https://zotov.by/guestbook</loc><priority>0.80</priority></url>
+  <url><loc>https://zotov.by/vote</loc><priority>0.50</priority></url>
+</urlset>
