@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Не деплоим два коммита одновременно: новый пуш отменяет предыдущий деплой.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Гейт: не заливаем на Railway код, который не компилируется.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      # Сборку делает Railpack на стороне Railway, сюда уезжают только исходники
+      # (railway up уважает .gitignore, так что dist/ и node_modules не загружаются).
+      - name: Deploy to Railway
+        run: railway up --ci --service zotov-by
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

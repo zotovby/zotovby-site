@@ -14,14 +14,58 @@ const ITEMS: MenuItem[] = [
 ];
 
 /**
+ * Фоновая музыка. Настоящий MIDI (theme.mid остался исходником) современные
+ * браузеры не проигрывают: плагинов нет, и <embed> с .mid они молча кладут
+ * в «Загрузки». Поэтому та же мелодия лежит рядом в MP3.
+ */
+function sound(music: boolean): string {
+  return `<audio id="bgm" src="/music/theme.mp3" loop preload="auto"${music ? " autoplay" : ""}></audio>
+<script language="JavaScript" type="text/javascript">
+<!--
+var bgm = document.getElementById("bgm");
+var wantMusic = ${music};
+var armed = false;
+
+function playMusic() {
+  var started = bgm.play();
+  // Без клика посетителя автоплей глушат — тогда ждём первого действия.
+  if (started && started["catch"]) started["catch"](armGesture);
+}
+
+function armGesture() {
+  if (armed) return;
+  armed = true;
+  document.addEventListener("click", onGesture, true);
+  document.addEventListener("keydown", onGesture, true);
+  document.addEventListener("touchstart", onGesture, true);
+}
+
+function onGesture() {
+  armed = false;
+  document.removeEventListener("click", onGesture, true);
+  document.removeEventListener("keydown", onGesture, true);
+  document.removeEventListener("touchstart", onGesture, true);
+  if (wantMusic) playMusic();
+}
+
+function toggleMusic() {
+  wantMusic = !wantMusic;
+  if (wantMusic) playMusic(); else bgm.pause();
+  document.getElementById("musiclabel").innerHTML = "&#9834; музыка: " + (wantMusic ? "ВКЛ" : "ВЫКЛ");
+  document.getElementById("musictoggle").href = "/menu?music=" + (wantMusic ? "off" : "on");
+  return false;  // фрейм не перезагружаем, иначе мелодия начнётся заново
+}
+
+if (wantMusic) playMusic();
+// -->
+</script>`;
+}
+
+/**
  * Левый фрейм. Здесь же играет фоновая музыка — меню не перезагружается
  * при переходах, значит мелодия не начинается заново. Хитрость эпохи.
  */
 export function menuPage(music: boolean): Html {
-  const sound = music
-    ? `<bgsound src="/music/theme.mid" loop="infinite">
-<embed src="/music/theme.mid" autostart="true" loop="true" hidden="true" width="0" height="0">`
-    : "";
 
   const items = ITEMS.map(
     (item) => html`<tr>
@@ -44,7 +88,7 @@ export function menuPage(music: boolean): Html {
 <title>Меню</title>
 </head>
 <body background="/img/bg_stars.gif" bgcolor="#000033" text="#FFFF99" link="#00FFFF" vlink="#FF66FF" alink="#FF0000" leftmargin="6" topmargin="8" marginwidth="6" marginheight="8">
-${raw(sound)}
+${raw(sound(music))}
 <center>
 <img src="/img/globe.gif" width="65" height="60" alt="globe" border="0"><br>
 <font face="Comic Sans MS, Arial" size="3" color="#FFCC00"><b>${SITE.owner}</b></font><br>
@@ -64,9 +108,7 @@ ${items}
 <br>
 <font face="Arial" size="1" color="#9999CC">интернет-пейджер</font>
 <br><br>
-<a href="/menu?music=${music ? "off" : "on"}"><font face="Arial" size="1" color="#00FF00">
-&#9834; музыка: ${music ? "ВКЛ" : "ВЫКЛ"}
-</font></a>
+<a id="musictoggle" href="/menu?music=${music ? "off" : "on"}" onclick="return toggleMusic()"><font id="musiclabel" face="Arial" size="1" color="#00FF00">&#9834; музыка: ${music ? "ВКЛ" : "ВЫКЛ"}</font></a>
 <br><br>
 <font face="Arial" size="1" color="#666699">
 Открыта<br>12.03.1999<br><br>

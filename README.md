@@ -1,16 +1,92 @@
-# Fresh project
+# zotov.by
 
-Your new Fresh project is ready to go. You can follow the Fresh "Getting
-Started" guide here: https://fresh.deno.dev/docs/getting-started
+Персональная страничка Сергея Зотова, стилизованная под домашние сайты русского
+интернета 1999 года: заставка со «ВХОДОМ», фреймы, бегущая строка, счётчик-одометр,
+гостевая книга, голосовалка, звёздочки за курсором и фоновая музыка.
 
-### Usage
+Снаружи — HTML 4.01 Transitional, таблицы и `<font>`. Внутри — обычный современный
+TypeScript-сервер, который весь этот антиквариат генерирует.
 
-Make sure to install Deno: https://deno.land/manual/getting_started/installation
+Живёт на **https://zotov.by**
 
-Then start the project:
+## Стек
+
+| Что | Чем |
+| --- | --- |
+| Сервер | Node 20+, [Hono](https://hono.dev) + `@hono/node-server` |
+| Шаблоны | тегированные строки `hono/html`, HTML пишется руками |
+| Хранилище | PostgreSQL через `pg`; без `DATABASE_URL` — в памяти процесса |
+| Сборка | `tsc`, и всё. Ни бандлера, ни CSS-препроцессора, ни фронтенд-фреймворка |
+
+## Запуск
+
+```sh
+npm install
+npm run dev     # tsc --watch + node --watch → http://localhost:3000
+```
+
+Без переменных окружения сайт поднимется на in-memory хранилище: счётчик и гостевая
+книга проживут до перезапуска процесса. Для разработки это штатный режим — база нужна
+только на проде.
+
+### Переменные окружения
+
+| Переменная | По умолчанию | Зачем |
+| --- | --- | --- |
+| `PORT` | `3000` | порт HTTP-сервера |
+| `DATABASE_URL` | — | строка подключения к Postgres; если не задана, включается память |
+| `DB_SCHEMA` | `zotovby` | схема в базе. База общая с другим проектом, в `public` не пишем |
+
+### Команды
+
+| Команда | Что делает |
+| --- | --- |
+| `npm run dev` | компиляция и сервер в watch-режиме |
+| `npm run build` | `tsc` → `dist/` |
+| `npm start` | запуск собранного `dist/server.js` |
+| `npm run typecheck` | `tsc --noEmit`; это же гейт в CI |
+
+Тестов и линтера нет — единственная проверка перед деплоем — typecheck.
+
+## Структура
 
 ```
-deno task start
+src/
+  server.ts        маршруты, разбор форм, антиспам гостевой книги
+  layout.ts        общая обвязка страницы, SITE, heading/panel/divider/footer
+  db.ts            интерфейс Store + две реализации: MemoryStore и PostgresStore
+  pages/           по файлу на страницу, каждый экспортирует одну функцию
+public/
+  img/             гифки эпохи: кнопочки 88×31, цифры счётчика, разделители
+  music/           theme.mid (исходник) и theme.mp3 (то, что реально играет)
+  cursor.js        звёздочки, летящие за курсором
 ```
 
-This will watch the project directory and restart as necessary.
+## Страницы
+
+| Маршрут | Что это |
+| --- | --- |
+| `/` | заставка с кнопкой «ВХОД» |
+| `/main` | frameset: меню слева, содержимое справа |
+| `/menu` | левый фрейм; здесь же живёт фоновая музыка |
+| `/home` | главная, счётчик посещений, «что нового» |
+| `/about` | анкета |
+| `/computer` | конфигурация компьютера |
+| `/photos` | фотоальбом (вечно «в разработке») |
+| `/links` | ссылки и кольцо сайтов |
+| `/guestbook` | гостевая книга, `GET` + `POST` |
+| `/vote` | голосовалка, `GET` + `POST`, голос помнится в cookie |
+
+## Деплой
+
+Пуш в `master` запускает [GitHub Actions](.github/workflows/deploy.yml): установка
+зависимостей → `npm run typecheck` → `railway up --service zotov-by`. Собирает уже
+Railway (Railpack), в CI уезжают только исходники.
+
+Таблицы в базе создаются самим приложением при старте (`PostgresStore.init()`),
+миграций нет.
+
+## Как сюда писать код
+
+Стиль страничек — не случайность, а требование: правила и чек-листы в
+[CLAUDE.md](CLAUDE.md).
